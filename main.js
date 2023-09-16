@@ -61,6 +61,19 @@ function main() {
   }
 
   {
+    const cubeSize = 30
+    const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize)
+    const cubeMat = new THREE.MeshPhongMaterial({
+      color: '#CCC',
+      side: THREE.BackSide,
+    })
+    const mesh = new THREE.Mesh(cubeGeo, cubeMat)
+    mesh.receiveShadow = true
+    mesh.position.set(0, cubeSize / 2 - 0.1, 0)
+    scene.add(mesh)
+  }
+
+  {
     const sphereRadius = 3
     const sphereWidthDivisions = 32
     const sphereHeightDivisions = 16
@@ -101,27 +114,15 @@ function main() {
   {
     const color = 0xffffff
     const intensity = 100
-    const light = new THREE.SpotLight(color, intensity)
+    const light = new THREE.PointLight(color, intensity)
     light.castShadow = true
     light.position.set(0, 10, 0)
-    light.target.position.set(-4, 0, -4)
     scene.add(light)
-    scene.add(light.target)
 
-    const cameraHelper = new THREE.CameraHelper(light.shadow.camera)
-    scene.add(cameraHelper)
+    const helper = new THREE.PointLightHelper(light)
+    scene.add(helper)
 
-    function updateCamera() {
-      // update the light target's matrixWorld because it's needed by the helper
-      light.target.updateMatrixWorld()
-      // update the light's shadow camera's projection matrix
-      light.shadow.camera.updateProjectionMatrix()
-      // and now update the camera helper we're using to show the light's shadow camera
-      cameraHelper.update()
-    }
-
-    updateCamera()
-    setTimeout(updateCamera)
+    function updateCamera() {}
 
     class MinMaxGUIHelper {
       constructor(obj, minProp, maxProp, minDif) {
@@ -149,28 +150,10 @@ function main() {
       }
     }
 
-    class DegRadHelper {
-      constructor(obj, prop) {
-        this.obj = obj
-        this.prop = prop
-      }
-      get value() {
-        return THREE.MathUtils.radToDeg(this.obj[this.prop])
-      }
-      set value(v) {
-        this.obj[this.prop] = THREE.MathUtils.degToRad(v)
-      }
-    }
-
     const gui = new GUI()
     gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('color')
     gui.add(light, 'intensity', 0, 200)
     gui.add(light, 'distance', 0, 40).onChange(updateCamera)
-    gui
-      .add(new DegRadHelper(light, 'angle'), 'value', 0, 90)
-      .name('angle')
-      .onChange(updateCamera)
-    gui.add(light, 'penumbra', 0, 1, 0.01)
 
     {
       const folder = gui.addFolder('Shadow Camera')
@@ -192,7 +175,6 @@ function main() {
     }
 
     makeXYZGUI(gui, light.position, 'position', updateCamera)
-    makeXYZGUI(gui, light.target.position, 'target', updateCamera)
   }
 
   function resizeRendererToDisplaySize(renderer) {
