@@ -102,7 +102,7 @@ function main() {
   {
     const color = 0xffffff
     const intensity = 3
-    const light = new THREE.DirectionalLight(color, intensity)
+    const light = new THREE.SpotLight(color, intensity)
     light.castShadow = true
     light.position.set(0, 10, 0)
     light.target.position.set(-4, 0, -4)
