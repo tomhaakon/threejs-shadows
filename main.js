@@ -20,7 +20,6 @@ function main() {
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far)
   camera.position.set(0, 10, 20)
 
-  // camera.lookAt(0, 0, 0)
   const controls = new OrbitControls(camera, canvas)
   controls.target.set(0, 5, 0)
   controls.update()
@@ -28,7 +27,6 @@ function main() {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('black')
 
-  //plane
   {
     const planeSize = 40
 
@@ -42,7 +40,7 @@ function main() {
     texture.repeat.set(repeats, repeats)
 
     const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize)
-    const planeMat = new THREE.MeshBasicMaterial({
+    const planeMat = new THREE.MeshPhongMaterial({
       map: texture,
       side: THREE.DoubleSide,
     })
@@ -51,7 +49,7 @@ function main() {
     mesh.rotation.x = Math.PI * -0.5
     scene.add(mesh)
   }
-  //cube
+
   {
     const cubeSize = 4
     const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize)
@@ -63,7 +61,6 @@ function main() {
     scene.add(mesh)
   }
 
-  //sphere
   {
     const sphereRadius = 3
     const sphereWidthDivisions = 32
@@ -101,6 +98,7 @@ function main() {
     folder.add(vector3, 'z', -10, 10).onChange(onChangeFn)
     folder.open()
   }
+
   {
     const color = 0xffffff
     const intensity = 3
@@ -110,6 +108,9 @@ function main() {
     light.target.position.set(-4, 0, -4)
     scene.add(light)
     scene.add(light.target)
+
+    const cameraHelper = new THREE.CameraHelper(light.shadow.camera)
+    scene.add(cameraHelper)
 
     const helper = new THREE.DirectionalLightHelper(light)
     scene.add(helper)
