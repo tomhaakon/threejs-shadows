@@ -7,7 +7,6 @@ import { sendError } from './errorHandler.js'
 import { sendStatus } from './handleStatus.js'
 
 sendError('loaded', 'main.js') // send msg that main.js is loaded
-
 function main() {
   const canvas = document.querySelector('#c')
   const renderer = new THREE.WebGLRenderer({ antialias: true, canvas })
@@ -101,7 +100,7 @@ function main() {
 
   {
     const color = 0xffffff
-    const intensity = 3
+    const intensity = 100
     const light = new THREE.SpotLight(color, intensity)
     light.castShadow = true
     light.position.set(0, 10, 0)
@@ -112,13 +111,9 @@ function main() {
     const cameraHelper = new THREE.CameraHelper(light.shadow.camera)
     scene.add(cameraHelper)
 
-    const helper = new THREE.DirectionalLightHelper(light)
-    scene.add(helper)
-
     function updateCamera() {
       // update the light target's matrixWorld because it's needed by the helper
       light.target.updateMatrixWorld()
-      helper.update()
       // update the light's shadow camera's projection matrix
       light.shadow.camera.updateProjectionMatrix()
       // and now update the camera helper we're using to show the light's shadow camera
@@ -126,21 +121,7 @@ function main() {
     }
 
     updateCamera()
-
-    class DimensionGUIHelper {
-      constructor(obj, minProp, maxProp) {
-        this.obj = obj
-        this.minProp = minProp
-        this.maxProp = maxProp
-      }
-      get value() {
-        return this.obj[this.maxProp] * 2
-      }
-      set value(v) {
-        this.obj[this.maxProp] = v / 2
-        this.obj[this.minProp] = v / -2
-      }
-    }
+    setTimeout(updateCamera)
 
     class MinMaxGUIHelper {
       constructor(obj, minProp, maxProp, minDif) {
@@ -168,30 +149,32 @@ function main() {
       }
     }
 
+    class DegRadHelper {
+      constructor(obj, prop) {
+        this.obj = obj
+        this.prop = prop
+      }
+      get value() {
+        return THREE.MathUtils.radToDeg(this.obj[this.prop])
+      }
+      set value(v) {
+        this.obj[this.prop] = THREE.MathUtils.degToRad(v)
+      }
+    }
+
     const gui = new GUI()
     gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('color')
-    gui.add(light, 'intensity', 0, 10, 0.01)
+    gui.add(light, 'intensity', 0, 200)
+    gui.add(light, 'distance', 0, 40).onChange(updateCamera)
+    gui
+      .add(new DegRadHelper(light, 'angle'), 'value', 0, 90)
+      .name('angle')
+      .onChange(updateCamera)
+    gui.add(light, 'penumbra', 0, 1, 0.01)
+
     {
       const folder = gui.addFolder('Shadow Camera')
       folder.open()
-      folder
-        .add(
-          new DimensionGUIHelper(light.shadow.camera, 'left', 'right'),
-          'value',
-          1,
-          100
-        )
-        .name('width')
-        .onChange(updateCamera)
-      folder
-        .add(
-          new DimensionGUIHelper(light.shadow.camera, 'bottom', 'top'),
-          'value',
-          1,
-          100
-        )
-        .name('height')
-        .onChange(updateCamera)
       const minMaxGUIHelper = new MinMaxGUIHelper(
         light.shadow.camera,
         'near',
@@ -205,9 +188,6 @@ function main() {
       folder
         .add(minMaxGUIHelper, 'max', 0.1, 50, 0.1)
         .name('far')
-        .onChange(updateCamera)
-      folder
-        .add(light.shadow.camera, 'zoom', 0.01, 1.5, 0.01)
         .onChange(updateCamera)
     }
 
